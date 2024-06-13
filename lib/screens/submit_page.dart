@@ -18,7 +18,7 @@ class SubmitPage extends StatelessWidget {
   Future<void> _sendMutationWithFetch() async {
     final authToken = await _getAuthToken();
     if (authToken != null) {
-      const  url = 'http://127.0.0.1:8000/graphql/';
+      const  url = 'http://34.174.244.94:8080/graphql/';
       final headers = <String, String>{
         'Content-Type': 'application/json',
         'Authorization': 'JWT $authToken',

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class GraphQLService {
   static final HttpLink httpLink = HttpLink(
-    'http://127.0.0.1:8000/graphql/',  // Reemplaza con tu endpoint GraphQL
+    'http://34.174.244.94:8080/graphql/',  // Reemplaza con tu endpoint GraphQL
   );
 
   static final AuthLink authLink = AuthLink(
