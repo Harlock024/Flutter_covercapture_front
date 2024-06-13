@@ -41,4 +41,3 @@ class AlbumCoverList extends StatelessWidget {
     );
   }
 }
-
