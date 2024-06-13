@@ -1,34 +1,40 @@
 import 'package:flutter/material.dart';
-import 'album_cover_list.dart';
 import 'package:graphql_flutter/graphql_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'screens/album_cover_page.dart';
+import 'screens/submit_page.dart';
+ import 'screens/login_page.dart';
+import 'screens/register_page.dart';
 
-final HttpLink httpLink = HttpLink("http://127.0.0.1:8000/graphql/");
 
-final ValueNotifier<GraphQLClient> client = ValueNotifier<GraphQLClient>(
-  GraphQLClient(
-    link: httpLink,
-    cache: GraphQLCache(),
-  ),
-);
+ValueNotifier<GraphQLClient>? client;
 
-const String query = r'''
-query{
-  albumCovers{
-    id
-    Artist
-    albumName
-    coverUrl
-    postedBy{
-      username
-    }
-    votes{
-      id
-    }
-  } 
-}
-''';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+
+ 
+  final HttpLink httpLink = HttpLink(
+    "http://127.0.0.1:8000/graphql/",
+  );
+
+   final AuthLink authLink = AuthLink(getToken: () async {
+    // Obtener el authToken de SharedPreferences
+    final prefs = await SharedPreferences.getInstance();
+    final authToken = prefs.getString('authToken');
+    return  authToken !=null ?'JWT $authToken':null;
+  });
+
+  final Link link = authLink.concat(httpLink);
+
+  client = ValueNotifier<GraphQLClient>(
+    GraphQLClient(
+      link: link,
+      cache: GraphQLCache(),
+    ),
+  );
+
   runApp(const MyApp());
 }
 
@@ -38,55 +44,43 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GraphQLProvider(
-      client: client,
+      client: client!,
       child: MaterialApp(
-        title: 'Album Cover List',
-        theme: ThemeData(primarySwatch: Colors.green
+        title: 'Album Cover App',
+        theme: ThemeData(primarySwatch: Colors.grey),
+        home: const MyHomePage(),
+      ),
+    );
+  }
+}
 
-            /// Color.fromARGB(255, 4, 177, 82),
+class MyHomePage extends StatelessWidget {
+  const MyHomePage({super.key});
 
-            ),
-        home: Scaffold(
-            appBar: AppBar(
-              title: const Text("Album Cover"),
-            ),
-            body: Query(
-                options: QueryOptions(
-                    document: gql(query),
-                    variables: const <String, dynamic>{
-                      "VariableName": "Value"
-                    }),
-                builder: ((result, {fetchMore, refetch}) {
-                  if (result.isLoading) {
-                    return const Center(
-                      child: CircularProgressIndicator(),
-                    );
-                  }
-                  if (result.data == null) {
-                    return const Center(
-                      child: Text("No data found"),
-                    );
-                  }
-                  final albumCover = result.data!['albumCovers'];
-                  return ListView.builder(
-                    itemCount: albumCover.length,
-                    itemBuilder: (context, index) {
-                      final album = albumCover[index];
-                      final artist = album['Artist'];
-                      final albumName = album['albumName'];
-                      final coverUrl = album['coverUrl'];
-                      final postedBy = album['postedBy']['username'];
-                      final votes = album['votes'].length;
-                      return AlbumCoverList(
-                        Artist: artist,
-                        Album: albumName,
-                        ImageUrl: coverUrl,
-                        postedBy: postedBy,
-                        votes: votes,
-                      );
-                    },
-                  );
-                }))),
+  @override
+  Widget build(BuildContext context) {
+    return DefaultTabController(
+      length: 4,
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text("Flutter App"),
+          bottom: const TabBar(
+            tabs: [
+              Tab(text: 'Submit'),
+              Tab(text: 'Album Covers'),
+              Tab(text: 'Login'),
+              Tab(text: 'Register'),
+            ],
+          ),
+        ),
+        body:  TabBarView(
+          children: [
+            SubmitPage(),
+            const AlbumCoverPage(),
+            const LoginPage(),
+           const RegisterPage(),
+          ],
+        ),
       ),
     );
   }
